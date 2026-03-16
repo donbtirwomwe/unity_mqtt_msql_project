@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>NuGetForUnity.PluginAPI</id>
+    <version>1.0.0</version>
+    <title>NuGetForUnity PluginAPI</title>
+    <authors>NuGetForUnity Contributors</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <projectUrl>https://github.com/GlitchEnzo/NuGetForUnity</projectUrl>
+    <description>The API used to develop plug-ins for NuGetForUnity.</description>
+    <releaseNotes>https://github.com/GlitchEnzo/NuGetForUnity/releases</releaseNotes>
+    <copyright>Copyright (c) 2017-2023 Patrick McCarthy and contributors</copyright>
+    <tags>Unity</tags>
+    <repository type="git" url="https://github.com/GlitchEnzo/NuGetForUnity" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
+  </metadata>
+</package>

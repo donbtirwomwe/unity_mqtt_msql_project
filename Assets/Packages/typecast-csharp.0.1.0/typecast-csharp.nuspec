@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>typecast-csharp</id>
+    <version>0.1.0</version>
+    <authors>Neosapience</authors>
+    <license type="expression">Apache-2.0</license>
+    <licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/neosapience/typecast-sdk/tree/main/typecast-csharp</projectUrl>
+    <description>Official C# SDK for Typecast Text-to-Speech API. Supports .NET Standard 2.0+, .NET 6+, Unity (via NuGetForUnity), and Blazor.</description>
+    <copyright>Copyright (c) 2026 Neosapience &lt;help@typecast.ai&gt;</copyright>
+    <tags>typecast tts text-to-speech speech synthesis ai voice audio unity blazor</tags>
+    <repository type="git" url="https://github.com/neosapience/typecast-sdk" commit="49433955d0c90822ce309b70828add0fc349af6e" />
+    <dependencies>
+      <group targetFramework="net6.0" />
+      <group targetFramework="net8.0" />
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Microsoft.Bcl.AsyncInterfaces" version="8.0.0" exclude="Build,Analyzers" />
+        <dependency id="System.Net.Http.Json" version="8.0.1" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="8.0.5" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.1">
+        <dependency id="System.Text.Json" version="8.0.5" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

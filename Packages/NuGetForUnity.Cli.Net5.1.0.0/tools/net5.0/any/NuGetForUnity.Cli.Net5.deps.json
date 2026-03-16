@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v5.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v5.0": {
+      "NuGetForUnity.Cli.Net5/1.0.0": {
+        "runtime": {
+          "NuGetForUnity.Cli.Net5.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "NuGetForUnity.Cli.Net5/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

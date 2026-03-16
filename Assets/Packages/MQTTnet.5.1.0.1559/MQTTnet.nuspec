@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>MQTTnet</id>
+    <version>5.1.0.1559</version>
+    <authors>The contributors of MQTTnet</authors>
+    <license type="file">LICENSE</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <icon>nuget.png</icon>
+    <projectUrl>https://github.com/dotnet/MQTTnet</projectUrl>
+    <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
+    <releaseNotes>* Core: Used new language features across the entire library
+* Core: Performance improvements
+* Core: Added validations for variable byte integers which do not match the .NET uint perfectly
+* Client: Added support for pre-encoded UTF-8 binary buffers for user properties (#2228, thanks to @koepalex)
+* Server: Improved performance of retained messages when no event handler is attached (#2093, thanks to @zhaowgit)
+* Server: The event `InterceptingClientEnqueue` is now also called for retained messages (BREAKING CHANGE!)
+* Server: The local end point is now also exposed in the channel adapter (#2179)
+* Marked all projects as AOT compatible
+* Restored the strong name of the nugets
+* Embedded license file in all nugets (#2197, thanks to @JensNordenbro)
+* Added support for dotnet10</releaseNotes>
+    <copyright>Copyright (c) .NET Foundation and Contributors</copyright>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags>
+    <repository type="git" url="https://github.com/dotnet/MQTTnet.git" commit="8321806acf1dbd075fcdf8e34218ba7bc25844c8" />
+    <dependencies>
+      <group targetFramework="net8.0" />
+      <group targetFramework="net10.0" />
+    </dependencies>
+  </metadata>
+</package>

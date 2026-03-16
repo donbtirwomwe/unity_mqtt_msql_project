@@ -1,0 +1,987 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Typecast</name>
+    </assembly>
+    <members>
+        <member name="T:Typecast.Exceptions.TypecastException">
+            <summary>
+            Base exception for all Typecast API errors.
+            </summary>
+        </member>
+        <member name="P:Typecast.Exceptions.TypecastException.StatusCode">
+            <summary>
+            The HTTP status code returned by the API.
+            </summary>
+        </member>
+        <member name="P:Typecast.Exceptions.TypecastException.ResponseBody">
+            <summary>
+            The raw response body from the API (if available).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.TypecastException.#ctor(System.String,System.Int32,System.String,System.Exception)">
+            <summary>
+            Creates a new TypecastException.
+            </summary>
+            <param name="message">The error message</param>
+            <param name="statusCode">The HTTP status code</param>
+            <param name="responseBody">The raw response body (optional)</param>
+            <param name="innerException">The inner exception (optional)</param>
+        </member>
+        <member name="M:Typecast.Exceptions.TypecastException.FromStatusCode(System.Int32,System.String)">
+            <summary>
+            Creates an appropriate exception based on the HTTP status code.
+            </summary>
+            <param name="statusCode">The HTTP status code</param>
+            <param name="responseBody">The response body</param>
+            <returns>A TypecastException or derived exception</returns>
+        </member>
+        <member name="T:Typecast.Exceptions.BadRequestException">
+            <summary>
+            Exception thrown when the request is malformed or invalid (HTTP 400).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.BadRequestException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new BadRequestException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Exceptions.UnauthorizedException">
+            <summary>
+            Exception thrown when authentication fails (HTTP 401).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.UnauthorizedException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new UnauthorizedException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Exceptions.PaymentRequiredException">
+            <summary>
+            Exception thrown when the account has insufficient credits (HTTP 402).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.PaymentRequiredException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new PaymentRequiredException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Exceptions.NotFoundException">
+            <summary>
+            Exception thrown when a requested resource is not found (HTTP 404).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.NotFoundException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new NotFoundException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Exceptions.UnprocessableEntityException">
+            <summary>
+            Exception thrown when request validation fails (HTTP 422).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.UnprocessableEntityException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new UnprocessableEntityException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Exceptions.RateLimitException">
+            <summary>
+            Exception thrown when rate limit is exceeded (HTTP 429).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.RateLimitException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new RateLimitException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Exceptions.InternalServerException">
+            <summary>
+            Exception thrown when a server error occurs (HTTP 5xx).
+            </summary>
+        </member>
+        <member name="M:Typecast.Exceptions.InternalServerException.#ctor(System.String,System.Int32,System.String,System.Exception)">
+            <summary>
+            Creates a new InternalServerException.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.AgeEnum">
+            <summary>
+            Age classification for voice filtering.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.AgeEnum.Child">
+            <summary>Child voice (approximately 0-12 years)</summary>
+        </member>
+        <member name="F:Typecast.Models.AgeEnum.Teenager">
+            <summary>Teenager voice (approximately 13-19 years)</summary>
+        </member>
+        <member name="F:Typecast.Models.AgeEnum.YoungAdult">
+            <summary>Young adult voice (approximately 20-35 years)</summary>
+        </member>
+        <member name="F:Typecast.Models.AgeEnum.MiddleAge">
+            <summary>Middle-aged voice (approximately 36-55 years)</summary>
+        </member>
+        <member name="F:Typecast.Models.AgeEnum.Elder">
+            <summary>Elder voice (approximately 56+ years)</summary>
+        </member>
+        <member name="T:Typecast.Models.AgeEnumExtensions">
+            <summary>
+            Extension methods for AgeEnum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.AgeEnumExtensions.ToApiString(Typecast.Models.AgeEnum)">
+            <summary>
+            Converts the AgeEnum to its API string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.AgeEnumExtensions.ParseAge(System.String)">
+            <summary>
+            Parses a string to AgeEnum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.AudioFormat">
+            <summary>
+            Available audio output formats.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.AudioFormat.Wav">
+            <summary>WAV format (uncompressed, higher quality)</summary>
+        </member>
+        <member name="F:Typecast.Models.AudioFormat.Mp3">
+            <summary>MP3 format (compressed, smaller file size)</summary>
+        </member>
+        <member name="T:Typecast.Models.AudioFormatExtensions">
+            <summary>
+            Extension methods for AudioFormat enum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.AudioFormatExtensions.ToApiString(Typecast.Models.AudioFormat)">
+            <summary>
+            Converts the AudioFormat to its API string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.AudioFormatExtensions.ParseAudioFormat(System.String)">
+            <summary>
+            Parses a string to AudioFormat enum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.AudioFormatExtensions.ToContentType(Typecast.Models.AudioFormat)">
+            <summary>
+            Gets the MIME content type for the audio format.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.AudioFormatExtensions.ParseFromContentType(System.String)">
+            <summary>
+            Parses a MIME content type to AudioFormat enum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.EmotionPreset">
+            <summary>
+            Available emotion presets for TTS synthesis.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.Normal">
+            <summary>Neutral/normal tone</summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.Happy">
+            <summary>Happy/cheerful tone</summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.Sad">
+            <summary>Sad/melancholic tone</summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.Angry">
+            <summary>Angry/frustrated tone</summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.Whisper">
+            <summary>Whispered/quiet tone</summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.ToneUp">
+            <summary>Higher pitched/excited tone</summary>
+        </member>
+        <member name="F:Typecast.Models.EmotionPreset.ToneDown">
+            <summary>Lower pitched/calm tone</summary>
+        </member>
+        <member name="T:Typecast.Models.EmotionPresetExtensions">
+            <summary>
+            Extension methods for EmotionPreset enum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.EmotionPresetExtensions.ToApiString(Typecast.Models.EmotionPreset)">
+            <summary>
+            Converts the EmotionPreset to its API string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.EmotionPresetExtensions.ParseEmotionPreset(System.String)">
+            <summary>
+            Parses a string to EmotionPreset enum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.GenderEnum">
+            <summary>
+            Gender classification for voice filtering.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.GenderEnum.Male">
+            <summary>Male voice</summary>
+        </member>
+        <member name="F:Typecast.Models.GenderEnum.Female">
+            <summary>Female voice</summary>
+        </member>
+        <member name="T:Typecast.Models.GenderEnumExtensions">
+            <summary>
+            Extension methods for GenderEnum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.GenderEnumExtensions.ToApiString(Typecast.Models.GenderEnum)">
+            <summary>
+            Converts the GenderEnum to its API string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.GenderEnumExtensions.ParseGender(System.String)">
+            <summary>
+            Parses a string to GenderEnum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.JsonStringEnumMemberConverter">
+            <summary>
+            JSON converter that uses JsonPropertyName attribute for enum serialization.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.JsonStringEnumMemberConverter.CanConvert(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Typecast.Models.JsonStringEnumMemberConverter.CreateConverter(System.Type,System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc />
+        </member>
+        <member name="T:Typecast.Models.LanguageCode">
+            <summary>
+            Supported language codes (ISO 639-3 format).
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Korean">
+            <summary>Korean</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.English">
+            <summary>English</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Japanese">
+            <summary>Japanese</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Chinese">
+            <summary>Chinese (Mandarin)</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Spanish">
+            <summary>Spanish</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.French">
+            <summary>French</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.German">
+            <summary>German</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Italian">
+            <summary>Italian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Portuguese">
+            <summary>Portuguese</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Russian">
+            <summary>Russian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Hindi">
+            <summary>Hindi</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Vietnamese">
+            <summary>Vietnamese</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Thai">
+            <summary>Thai</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Indonesian">
+            <summary>Indonesian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Arabic">
+            <summary>Arabic</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Dutch">
+            <summary>Dutch</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Polish">
+            <summary>Polish</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Swedish">
+            <summary>Swedish</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Turkish">
+            <summary>Turkish</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Ukrainian">
+            <summary>Ukrainian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Czech">
+            <summary>Czech</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Danish">
+            <summary>Danish</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Finnish">
+            <summary>Finnish</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Greek">
+            <summary>Greek</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Hebrew">
+            <summary>Hebrew</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Hungarian">
+            <summary>Hungarian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Norwegian">
+            <summary>Norwegian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Romanian">
+            <summary>Romanian</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Slovak">
+            <summary>Slovak</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Malay">
+            <summary>Malay</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Filipino">
+            <summary>Filipino/Tagalog</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Bengali">
+            <summary>Bengali</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Tamil">
+            <summary>Tamil</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Telugu">
+            <summary>Telugu</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Cantonese">
+            <summary>Cantonese</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Catalan">
+            <summary>Catalan</summary>
+        </member>
+        <member name="F:Typecast.Models.LanguageCode.Croatian">
+            <summary>Croatian</summary>
+        </member>
+        <member name="T:Typecast.Models.LanguageCodeExtensions">
+            <summary>
+            Extension methods for LanguageCode enum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.LanguageCodeExtensions.ToApiString(Typecast.Models.LanguageCode)">
+            <summary>
+            Converts the LanguageCode to its ISO 639-3 string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.LanguageCodeExtensions.ParseLanguageCode(System.String)">
+            <summary>
+            Parses an ISO 639-3 string to LanguageCode enum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.Output">
+            <summary>
+            Audio output configuration for TTS synthesis.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.Output.Volume">
+            <summary>
+            Volume level (0-200, default 100).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.Output.AudioPitch">
+            <summary>
+            Audio pitch adjustment in semitones (-12 to 12, default 0).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.Output.AudioTempo">
+            <summary>
+            Audio tempo multiplier (0.5-2.0, default 1.0).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.Output.AudioFormat">
+            <summary>
+            Audio output format (default WAV).
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.Output.#ctor">
+            <summary>
+            Creates a new Output with default values.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.Output.#ctor(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Double},System.Nullable{Typecast.Models.AudioFormat})">
+            <summary>
+            Creates a new Output with specified values.
+            </summary>
+            <param name="volume">Volume level (0-200)</param>
+            <param name="audioPitch">Pitch adjustment in semitones (-12 to 12)</param>
+            <param name="audioTempo">Tempo multiplier (0.5-2.0)</param>
+            <param name="audioFormat">Audio format</param>
+        </member>
+        <member name="M:Typecast.Models.Output.Validate">
+            <summary>
+            Validates the output configuration.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when values are out of valid range.</exception>
+        </member>
+        <member name="T:Typecast.Models.ITTSPrompt">
+            <summary>
+            Base interface for all prompt types.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.ITTSPrompt.Validate">
+            <summary>
+            Validates the prompt configuration.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.Prompt">
+            <summary>
+            Basic emotion prompt for ssfm-v21 model.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.Prompt.EmotionPreset">
+            <summary>
+            The emotion preset to apply.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.Prompt.EmotionIntensity">
+            <summary>
+            Emotion intensity (0.0 to 2.0, default: 1.0).
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.Prompt.#ctor">
+            <summary>
+            Creates a new Prompt with default values.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.Prompt.#ctor(System.Nullable{Typecast.Models.EmotionPreset},System.Nullable{System.Double})">
+            <summary>
+            Creates a new Prompt with specified values.
+            </summary>
+            <param name="emotionPreset">The emotion preset to apply</param>
+            <param name="emotionIntensity">Emotion intensity (0.0 to 2.0)</param>
+        </member>
+        <member name="M:Typecast.Models.Prompt.Validate">
+            <inheritdoc />
+        </member>
+        <member name="T:Typecast.Models.PresetPrompt">
+            <summary>
+            Preset-based emotion prompt for ssfm-v30 model.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.PresetPrompt.EmotionType">
+            <summary>
+            The emotion type (always "preset" for this prompt type).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.PresetPrompt.EmotionPreset">
+            <summary>
+            The emotion preset to apply.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.PresetPrompt.EmotionIntensity">
+            <summary>
+            Emotion intensity (0.0 to 2.0, default: 1.0).
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.PresetPrompt.#ctor">
+            <summary>
+            Creates a new PresetPrompt with default values.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.PresetPrompt.#ctor(System.Nullable{Typecast.Models.EmotionPreset},System.Nullable{System.Double})">
+            <summary>
+            Creates a new PresetPrompt with specified values.
+            </summary>
+            <param name="emotionPreset">The emotion preset to apply</param>
+            <param name="emotionIntensity">Emotion intensity (0.0 to 2.0)</param>
+        </member>
+        <member name="M:Typecast.Models.PresetPrompt.Validate">
+            <inheritdoc />
+        </member>
+        <member name="T:Typecast.Models.SmartPrompt">
+            <summary>
+            Smart context-aware emotion prompt for ssfm-v30 model.
+            Uses surrounding text context to infer appropriate emotion.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.SmartPrompt.EmotionType">
+            <summary>
+            The emotion type (always "smart" for this prompt type).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.SmartPrompt.PreviousText">
+            <summary>
+            Previous text context for emotion inference (max 2000 characters).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.SmartPrompt.NextText">
+            <summary>
+            Next text context for emotion inference (max 2000 characters).
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.SmartPrompt.#ctor">
+            <summary>
+            Creates a new SmartPrompt with default values.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.SmartPrompt.#ctor(System.String,System.String)">
+            <summary>
+            Creates a new SmartPrompt with specified context.
+            </summary>
+            <param name="previousText">Text that comes before the current text</param>
+            <param name="nextText">Text that comes after the current text</param>
+        </member>
+        <member name="M:Typecast.Models.SmartPrompt.Validate">
+            <inheritdoc />
+        </member>
+        <member name="T:Typecast.Models.TTSModel">
+            <summary>
+            Available TTS (Text-to-Speech) model versions.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.TTSModel.SsfmV21">
+            <summary>
+            SSFM version 2.1 - supports basic emotion presets.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.TTSModel.SsfmV30">
+            <summary>
+            SSFM version 3.0 - supports advanced emotion control including smart mode.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.TTSModelExtensions">
+            <summary>
+            Extension methods for TTSModel enum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.TTSModelExtensions.ToApiString(Typecast.Models.TTSModel)">
+            <summary>
+            Converts the TTSModel to its API string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.TTSModelExtensions.ParseTTSModel(System.String)">
+            <summary>
+            Parses a string to TTSModel enum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.TTSRequest">
+            <summary>
+            Request model for Text-to-Speech synthesis.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.Text">
+            <summary>
+            The text to synthesize (max 5000 characters).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.VoiceId">
+            <summary>
+            The voice ID to use for synthesis.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.Model">
+            <summary>
+            The TTS model to use.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.Language">
+            <summary>
+            The language code for synthesis (optional, auto-detected if not specified).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.Prompt">
+            <summary>
+            Emotion/prompt configuration (optional).
+            Use <see cref="P:Typecast.Models.TTSRequest.Prompt"/> for ssfm-v21, or <see cref="T:Typecast.Models.PresetPrompt"/>/<see cref="T:Typecast.Models.SmartPrompt"/> for ssfm-v30.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.Output">
+            <summary>
+            Audio output configuration (optional).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSRequest.Seed">
+            <summary>
+            Random seed for reproducible synthesis (optional).
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.TTSRequest.#ctor">
+            <summary>
+            Creates a new empty TTSRequest.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.TTSRequest.#ctor(System.String,System.String,Typecast.Models.TTSModel)">
+            <summary>
+            Creates a new TTSRequest with required parameters.
+            </summary>
+            <param name="text">The text to synthesize</param>
+            <param name="voiceId">The voice ID to use</param>
+            <param name="model">The TTS model to use</param>
+        </member>
+        <member name="M:Typecast.Models.TTSRequest.Validate">
+            <summary>
+            Validates the request parameters.
+            </summary>
+            <exception cref="T:System.ArgumentException">Thrown when required fields are missing or invalid.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when values are out of valid range.</exception>
+        </member>
+        <member name="T:Typecast.Models.TTSResponse">
+            <summary>
+            Response model for Text-to-Speech synthesis.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSResponse.AudioData">
+            <summary>
+            The synthesized audio data as a byte array.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSResponse.Duration">
+            <summary>
+            The duration of the audio in seconds.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.TTSResponse.Format">
+            <summary>
+            The format of the audio data.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.TTSResponse.#ctor(System.Byte[],System.Double,Typecast.Models.AudioFormat)">
+            <summary>
+            Creates a new TTSResponse.
+            </summary>
+            <param name="audioData">The audio data bytes</param>
+            <param name="duration">The duration in seconds</param>
+            <param name="format">The audio format</param>
+        </member>
+        <member name="M:Typecast.Models.TTSResponse.SaveToFileAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Saves the audio data to a file.
+            </summary>
+            <param name="filePath">The path to save the audio file</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:Typecast.Models.TTSResponse.SaveToFile(System.String)">
+            <summary>
+            Saves the audio data to a file synchronously.
+            </summary>
+            <param name="filePath">The path to save the audio file</param>
+        </member>
+        <member name="M:Typecast.Models.TTSResponse.ToStream">
+            <summary>
+            Gets the audio data as a memory stream.
+            </summary>
+            <returns>A MemoryStream containing the audio data</returns>
+        </member>
+        <member name="P:Typecast.Models.TTSResponse.FileExtension">
+            <summary>
+            Gets the suggested file extension for the audio format.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.UseCaseEnum">
+            <summary>
+            Use case classification for voice filtering.
+            </summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.Education">
+            <summary>Education and learning content</summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.Game">
+            <summary>Gaming and entertainment</summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.General">
+            <summary>General purpose</summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.News">
+            <summary>News and broadcasting</summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.Documentary">
+            <summary>Documentary narration</summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.Audiobook">
+            <summary>Audiobook narration</summary>
+        </member>
+        <member name="F:Typecast.Models.UseCaseEnum.Conversational">
+            <summary>Conversational/chatbot</summary>
+        </member>
+        <member name="T:Typecast.Models.UseCaseEnumExtensions">
+            <summary>
+            Extension methods for UseCaseEnum.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.UseCaseEnumExtensions.ToApiString(Typecast.Models.UseCaseEnum)">
+            <summary>
+            Converts the UseCaseEnum to its API string representation.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.UseCaseEnumExtensions.ParseUseCase(System.String)">
+            <summary>
+            Parses a string to UseCaseEnum.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.ModelInfo">
+            <summary>
+            Model information for a voice.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.ModelInfo.Version">
+            <summary>
+            The model version (e.g., "ssfm-v21", "ssfm-v30").
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.ModelInfo.Emotions">
+            <summary>
+            List of emotions supported by this voice for this model.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.VoicesResponse">
+            <summary>
+            Voice response from V1 API (deprecated).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesResponse.VoiceId">
+            <summary>
+            The unique voice identifier.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesResponse.VoiceName">
+            <summary>
+            The display name of the voice.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesResponse.Model">
+            <summary>
+            The TTS model this voice supports.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesResponse.Emotions">
+            <summary>
+            List of emotions supported by this voice.
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.VoiceV2Response">
+            <summary>
+            Voice response from V2 API with enhanced metadata.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoiceV2Response.VoiceId">
+            <summary>
+            The unique voice identifier.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoiceV2Response.VoiceName">
+            <summary>
+            The display name of the voice.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoiceV2Response.Models">
+            <summary>
+            List of models this voice supports with their emotions.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoiceV2Response.Gender">
+            <summary>
+            The gender of the voice (optional).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoiceV2Response.Age">
+            <summary>
+            The age category of the voice (optional).
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoiceV2Response.UseCases">
+            <summary>
+            Recommended use cases for this voice (optional).
+            </summary>
+        </member>
+        <member name="T:Typecast.Models.VoicesV2Filter">
+            <summary>
+            Filter options for V2 voices API.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesV2Filter.Model">
+            <summary>
+            Filter by TTS model.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesV2Filter.Gender">
+            <summary>
+            Filter by gender.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesV2Filter.Age">
+            <summary>
+            Filter by age category.
+            </summary>
+        </member>
+        <member name="P:Typecast.Models.VoicesV2Filter.UseCase">
+            <summary>
+            Filter by use case.
+            </summary>
+        </member>
+        <member name="M:Typecast.Models.VoicesV2Filter.ToQueryParameters">
+            <summary>
+            Converts the filter to query parameters.
+            </summary>
+        </member>
+        <member name="T:Typecast.TypecastClient">
+            <summary>
+            Client for interacting with the Typecast Text-to-Speech API.
+            </summary>
+        </member>
+        <member name="M:Typecast.TypecastClient.#ctor">
+            <summary>
+            Creates a new TypecastClient using environment variables for configuration.
+            </summary>
+        </member>
+        <member name="M:Typecast.TypecastClient.#ctor(System.String)">
+            <summary>
+            Creates a new TypecastClient with the specified API key.
+            </summary>
+            <param name="apiKey">The Typecast API key</param>
+        </member>
+        <member name="M:Typecast.TypecastClient.#ctor(Typecast.TypecastClientConfig)">
+            <summary>
+            Creates a new TypecastClient with the specified configuration.
+            </summary>
+            <param name="config">The client configuration</param>
+        </member>
+        <member name="M:Typecast.TypecastClient.TextToSpeechAsync(Typecast.Models.TTSRequest,System.Threading.CancellationToken)">
+            <summary>
+            Synthesizes text to speech.
+            </summary>
+            <param name="request">The TTS request</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The TTS response containing audio data</returns>
+            <exception cref="T:Typecast.Exceptions.TypecastException">Thrown when the API returns an error</exception>
+        </member>
+        <member name="M:Typecast.TypecastClient.TextToSpeech(Typecast.Models.TTSRequest)">
+            <summary>
+            Synthesizes text to speech synchronously.
+            </summary>
+            <param name="request">The TTS request</param>
+            <returns>The TTS response containing audio data</returns>
+            <exception cref="T:Typecast.Exceptions.TypecastException">Thrown when the API returns an error</exception>
+        </member>
+        <member name="M:Typecast.TypecastClient.GetVoicesAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets available voices (V1 API - deprecated, use GetVoicesV2Async instead).
+            </summary>
+            <param name="model">Optional model filter</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of available voices</returns>
+        </member>
+        <member name="M:Typecast.TypecastClient.GetVoiceAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets a voice by ID (V1 API - deprecated, use GetVoiceV2Async instead).
+            </summary>
+            <param name="voiceId">The voice ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The voice information</returns>
+        </member>
+        <member name="M:Typecast.TypecastClient.GetVoicesV2Async(Typecast.Models.VoicesV2Filter,System.Threading.CancellationToken)">
+            <summary>
+            Gets available voices with enhanced metadata (V2 API).
+            </summary>
+            <param name="filter">Optional filter options</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of available voices with metadata</returns>
+        </member>
+        <member name="M:Typecast.TypecastClient.GetVoicesV2(Typecast.Models.VoicesV2Filter)">
+            <summary>
+            Gets available voices with enhanced metadata synchronously (V2 API).
+            </summary>
+            <param name="filter">Optional filter options</param>
+            <returns>List of available voices with metadata</returns>
+        </member>
+        <member name="M:Typecast.TypecastClient.GetVoiceV2Async(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets a voice by ID with enhanced metadata (V2 API).
+            </summary>
+            <param name="voiceId">The voice ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The voice information with metadata</returns>
+        </member>
+        <member name="M:Typecast.TypecastClient.GetVoiceV2(System.String)">
+            <summary>
+            Gets a voice by ID with enhanced metadata synchronously (V2 API).
+            </summary>
+            <param name="voiceId">The voice ID</param>
+            <returns>The voice information with metadata</returns>
+        </member>
+        <member name="M:Typecast.TypecastClient.Dispose">
+            <summary>
+            Disposes the client and releases resources.
+            </summary>
+        </member>
+        <member name="M:Typecast.TypecastClient.Dispose(System.Boolean)">
+            <summary>
+            Disposes the client and releases resources.
+            </summary>
+            <param name="disposing">Whether to dispose managed resources</param>
+        </member>
+        <member name="T:Typecast.TypecastClientConfig">
+            <summary>
+            Configuration options for the Typecast client.
+            </summary>
+        </member>
+        <member name="F:Typecast.TypecastClientConfig.DefaultApiHost">
+            <summary>
+            Default API host URL.
+            </summary>
+        </member>
+        <member name="F:Typecast.TypecastClientConfig.ApiKeyEnvVar">
+            <summary>
+            Environment variable name for API key.
+            </summary>
+        </member>
+        <member name="F:Typecast.TypecastClientConfig.ApiHostEnvVar">
+            <summary>
+            Environment variable name for API host.
+            </summary>
+        </member>
+        <member name="P:Typecast.TypecastClientConfig.ApiKey">
+            <summary>
+            The Typecast API key.
+            If not provided, will be read from TYPECAST_API_KEY environment variable.
+            </summary>
+        </member>
+        <member name="P:Typecast.TypecastClientConfig.ApiHost">
+            <summary>
+            The Typecast API host URL.
+            If not provided, will be read from TYPECAST_API_HOST environment variable or use the default.
+            </summary>
+        </member>
+        <member name="P:Typecast.TypecastClientConfig.TimeoutSeconds">
+            <summary>
+            HTTP timeout in seconds. Default is 30 seconds.
+            </summary>
+        </member>
+        <member name="P:Typecast.TypecastClientConfig.HttpClient">
+            <summary>
+            Custom HttpClient to use for requests.
+            If not provided, a new HttpClient will be created.
+            </summary>
+        </member>
+        <member name="M:Typecast.TypecastClientConfig.GetEffectiveApiKey">
+            <summary>
+            Gets the effective API key, falling back to environment variable if not set.
+            </summary>
+            <returns>The API key</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown when no API key is configured</exception>
+        </member>
+        <member name="M:Typecast.TypecastClientConfig.GetEffectiveApiHost">
+            <summary>
+            Gets the effective API host, falling back to environment variable or default if not set.
+            </summary>
+            <returns>The API host URL</returns>
+        </member>
+    </members>
+</doc>
