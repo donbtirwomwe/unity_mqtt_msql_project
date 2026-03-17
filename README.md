@@ -34,6 +34,30 @@ Unity demo project for industrial asset monitoring using:
 4. Configure DB/MQTT values in `Assets/Resources/DBConfig.asset`.
 5. Press Play and use the UI to load and monitor assets.
 
+## Local Containers (SQL + MQTT)
+Use this when teammates do not have access to your Nexus runtime.
+
+1. Install Docker Desktop.
+2. From the repository root, run:
+   `pwsh ./containers/up.ps1`
+3. This starts:
+   - SQL Server on `localhost:1433`
+   - MQTT broker on `localhost:1884`
+4. Set Unity DB config values to local:
+   - `serverIp = 127.0.0.1`
+   - `port = 1433`
+   - `database = IndustrialAssets`
+   - `userId = sa`
+   - `password = Industrial@Demo2026!`
+   - `mqttServerIp = 127.0.0.1`
+   - `mqttPort = 1884`
+
+The SQL container auto-creates the `IndustrialAssets` database and seeds demo data from:
+- `containers/mssql/init/seed_leaktest_pressure01.sql`
+
+Stop containers:
+- `pwsh ./containers/down.ps1`
+
 ## Important Security Note
 This project currently includes default database and broker settings intended for local/demo use. Before production or wider sharing:
 - Replace demo credentials

@@ -1,0 +1,35 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: industrial-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: "Developer"
+      SQL_DATABASE: ${SQL_DATABASE}
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./mssql/init:/init:ro
+    entrypoint:
+      - /bin/bash
+      - /init/entrypoint.sh
+    restart: unless-stopped
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: industrial-mqtt
+    ports:
+      - "${MQTT_HOST_PORT}:1883"
+      - "${MQTT_WS_HOST_PORT}:9001"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt_data:/mosquitto/data
+      - mqtt_log:/mosquitto/log
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
+  mqtt_data:
+  mqtt_log:
