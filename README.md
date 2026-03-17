@@ -40,10 +40,12 @@ Use this when teammates do not have access to your Nexus runtime.
 1. Install Docker Desktop.
 2. From the repository root, run:
    `pwsh ./containers/up.ps1`
-3. This starts:
+3. Verify dependencies are reachable before opening Unity:
+   `pwsh ./containers/check-connectivity.ps1`
+4. This starts:
    - SQL Server on `localhost:1433`
    - MQTT broker on `localhost:1884`
-4. Set Unity DB config values to local:
+5. Set Unity DB config values to local:
    - `serverIp = 127.0.0.1`
    - `port = 1433`
    - `database = IndustrialAssets`
