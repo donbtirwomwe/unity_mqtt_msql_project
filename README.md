@@ -64,6 +64,12 @@ The Unity client now reads data through stored procedures instead of direct tabl
 The SQL container auto-creates the `IndustrialAssets` database and seeds demo data from:
 - `containers/mssql/init/seed_leaktest_pressure01.sql`
 
+To import your own data into the database, use the provided Excel template:
+- `Tools/DB_Import_Template.xlsx`
+
+Open it in Excel, fill in the **ASSETS**, **DATAPOINTS**, **DATACHANNELS**, and **DATAFILES** sheets following the column notes in row 2.
+The **TOPICMAPPINGS** and **ASSETACCESS** sheets are reference-only — those are generated automatically by the DB bootstrap scripts, not manually populated.
+
 Stop containers:
 - `pwsh ./containers/down.ps1`
 
