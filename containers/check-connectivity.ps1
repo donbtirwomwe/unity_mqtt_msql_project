@@ -14,11 +14,19 @@ Get-Content $envFile | ForEach-Object {
     }
 }
 
-$saPassword = if ($envMap.ContainsKey("SA_PASSWORD")) { $envMap["SA_PASSWORD"] } else { "Industrial@Demo2026!" }
+$saPassword = if ($envMap.ContainsKey("SA_PASSWORD")) { $envMap["SA_PASSWORD"] } else { "" }
 $sqlDatabase = if ($envMap.ContainsKey("SQL_DATABASE")) { $envMap["SQL_DATABASE"] } else { "IndustrialAssets" }
+$appDbUser = if ($envMap.ContainsKey("APP_DB_USER")) { $envMap["APP_DB_USER"] } else { "app_reader" }
+$appDbPassword = if ($envMap.ContainsKey("APP_DB_PASSWORD")) { $envMap["APP_DB_PASSWORD"] } else { "" }
+$mqttAppUser = if ($envMap.ContainsKey("MQTT_APP_USERNAME")) { $envMap["MQTT_APP_USERNAME"] } else { "" }
+$mqttTopicPrefix = if ($envMap.ContainsKey("MQTT_APP_TOPIC_PREFIX")) { $envMap["MQTT_APP_TOPIC_PREFIX"] } else { "mx" }
 $mqttPort = if ($envMap.ContainsKey("MQTT_HOST_PORT")) { [int]$envMap["MQTT_HOST_PORT"] } else { 1884 }
 
 Write-Host "Using env file: $envFile"
+
+if ([string]::IsNullOrWhiteSpace($saPassword)) {
+    throw "SA_PASSWORD must be set in $envFile"
+}
 
 # 1) Check Docker is available.
 docker version | Out-Null
@@ -56,6 +64,16 @@ $null = docker exec industrial-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost 
 $procCheck = docker exec industrial-mqtt sh -lc "ps aux | grep mosquitto | grep -v grep"
 if (-not $procCheck) {
     throw "MQTT broker process check failed in industrial-mqtt container"
+}
+
+# 6) Verify app DB login and MQTT auth files exist.
+if (-not [string]::IsNullOrWhiteSpace($appDbPassword)) {
+    $null = docker exec industrial-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U "$appDbUser" -P "$appDbPassword" -No -d "$sqlDatabase" -Q "EXEC dbo.usp_GetAssetCount"
+}
+
+$authCheck = docker exec industrial-mqtt sh -lc "test -s /mosquitto/config/auth/passwd && test -s /mosquitto/config/auth/acl && grep -q '^user $mqttAppUser$' /mosquitto/config/auth/acl && grep -q '^topic readwrite $mqttTopicPrefix/#$' /mosquitto/config/auth/acl"
+if ($LASTEXITCODE -ne 0) {
+    throw "MQTT auth file check failed in industrial-mqtt container"
 }
 
 Write-Host "Connectivity checks passed: SQL + MQTT are reachable and initialized."

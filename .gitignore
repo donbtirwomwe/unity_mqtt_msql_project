@@ -40,3 +40,8 @@ Thumbs.db
 
 # Local container overrides
 containers/.env
+containers/mqtt/auth/
+
+# Local DB/MQTT config (contains credentials - do not commit)
+Assets/Resources/DBConfig.asset
+Assets/Resources/DBConfig.asset.meta

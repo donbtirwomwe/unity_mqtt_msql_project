@@ -28,7 +28,7 @@ Unity demo project for industrial asset monitoring using:
 
 ## Setup
 1. Open the project folder in Unity Hub:
-   `C:/Users/donbt/projects/unity_mqtt_msql_project`
+   `<path-to-cloned-repo>`
 2. Use Unity Editor version `6000.3.10f1`.
 3. Open scene: `Assets/Scenes/Industrial_Demo.unity` (or `AssetViewer.unity`).
 4. Configure DB/MQTT values in `Assets/Resources/DBConfig.asset`.
@@ -40,6 +40,7 @@ Use this when teammates do not have access to your Nexus runtime.
 1. Install Docker Desktop.
 2. From the repository root, run:
    `pwsh ./containers/up.ps1`
+   This generates broker auth files from `containers/.env` before startup.
 3. Verify dependencies are reachable before opening Unity:
    `pwsh ./containers/check-connectivity.ps1`
 4. This starts:
@@ -49,10 +50,16 @@ Use this when teammates do not have access to your Nexus runtime.
    - `serverIp = 127.0.0.1`
    - `port = 1433`
    - `database = IndustrialAssets`
-   - `userId = sa`
-   - `password = Industrial@Demo2026!`
+   - `userId = app_reader`
+   - `password = <your-app-db-password>`
    - `mqttServerIp = 127.0.0.1`
    - `mqttPort = 1884`
+   - `mqttUserName = <your-mqtt-app-username>`
+   - `mqttPassword = <your-mqtt-app-password>`
+
+If those four credential fields are left blank in `Assets/Resources/DBConfig.asset`, Unity will fall back to `containers/.env` for local-editor runs.
+
+The Unity client now reads data through stored procedures instead of direct table queries, and the seeded MQTT routes use opaque aliases under `mx/...` instead of descriptive process paths.
 
 The SQL container auto-creates the `IndustrialAssets` database and seeds demo data from:
 - `containers/mssql/init/seed_leaktest_pressure01.sql`
