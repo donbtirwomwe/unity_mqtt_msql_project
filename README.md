@@ -67,6 +67,101 @@ The SQL container auto-creates the `IndustrialAssets` database and seeds demo da
 Stop containers:
 - `pwsh ./containers/down.ps1`
 
+## Integrating Into An Existing Unity Project
+Use this if a teammate already has a Unity project and scene, but needs this repo's SQL Server + MQTT backend and the Unity-side runtime integration added to that existing scene.
+
+There are two parts to integrate:
+- the backend stack: SQL Server + MQTT broker + init scripts under `containers/`
+- the Unity scene/runtime pieces: scripts, config asset, MQTT client libraries, and optional demo UI assets under `Assets/`
+
+### Copy These Into The Target Unity Project
+- `Assets/Config/DBConfig.cs`
+- `Assets/Config/DBConfigHolder.cs` (optional helper)
+- `Assets/AssetController.cs`
+- `Assets/Scripts/AssetLoaderDemo.cs`
+- `Assets/Scripts/Models/`
+- `Assets/UnityMainThreadDispatcher.cs`
+- `Assets/M2Mqtt/`
+- `Assets/M2MqttUnity/`
+- `Assets/Plugins/` if the target project does not already contain the required MQTT/.NET assemblies
+
+Keep the same `Assets/...` relative paths where possible. The runtime code loads `Resources/DBConfig` by name, so `DBConfig.asset` must end up at `Assets/Resources/DBConfig.asset`.
+
+### Backend Files To Bring Along
+If they do not already have SQL Server and MQTT infrastructure, they also need these non-Unity files from this repo:
+- `containers/up.ps1`
+- `containers/down.ps1`
+- `containers/check-connectivity.ps1`
+- `containers/docker-compose.yml`
+- `containers/.env.example`
+- `containers/mqtt/`
+- `containers/mssql/`
+
+These files do not go inside the Unity `Assets/` tree. They should live alongside the Unity project repo, or in a sibling repo/folder the teammate will run locally.
+
+### Optional Demo UI Assets
+Copy these only if they want the same demo scene/prefab flow:
+- `Assets/AssetUI_Prefab.prefab`
+- `Assets/Prefabs/`
+- `Assets/UI/`
+- any directly referenced art/material assets used by the prefab or scene
+
+### Do Not Copy
+- `Library/`
+- `Temp/`
+- `Logs/`
+- `UserSettings/`
+- `Assets/_Recovery/`
+- `.vscode/`
+- `ProjectSettings/` as a full replacement
+- `Packages/manifest.json` as a full replacement
+
+### Target Project Local Setup
+Each teammate should create or update these local-only files in the target Unity project and backend folder:
+
+1. `Assets/Resources/DBConfig.asset`
+   - Create via Unity menu: `Assets > Create > Config > DBConfig`
+   - Place it at `Assets/Resources/DBConfig.asset`
+   - Set at minimum:
+     - `serverIp`
+     - `port`
+     - `database`
+     - `mqttServerIp`
+     - `mqttPort`
+     - optionally `userId`, `password`, `mqttUserName`, `mqttPassword`
+
+2. Local backend config
+   - Copy `containers/.env.example` to `containers/.env`
+   - Fill in local secrets such as:
+     - `SA_PASSWORD`
+     - `APP_DB_USER`
+     - `APP_DB_PASSWORD`
+     - `MQTT_APP_USERNAME`
+     - `MQTT_APP_PASSWORD`
+
+If the credential fields in `Assets/Resources/DBConfig.asset` are left blank, the Unity code can fall back to values in `containers/.env` for local editor runs.
+
+### Required Manual Wiring In The Target Scene
+1. Add the imported runtime script to the target scene:
+   - `AssetController` for the simpler controller flow, or
+   - `AssetLoaderDemo` for the demo asset-loading flow
+2. Assign the `DBConfig` asset to any scene objects that expose it.
+3. Make sure the target project has the required Unity packages and assembly compatibility settings for the imported plugins.
+4. Start the local SQL + MQTT backend before Play mode:
+   - `pwsh ./containers/up.ps1`
+   - `pwsh ./containers/check-connectivity.ps1`
+
+### What The Teammate Is Actually Adding
+If their existing scene currently has no SQL or MQTT support, they are adding:
+- a local SQL Server container seeded with the required schema and demo data
+- a local MQTT broker container with auth/ACL setup
+- Unity scripts that query SQL and subscribe to MQTT topics
+- a `DBConfig` asset that tells the scene how to connect to both services
+
+### Package Merge Guidance
+Do not overwrite the target project's `Packages/manifest.json`.
+Instead, compare this repo's package manifest and merge only the missing package entries the imported assets/scripts require.
+
 ## Important Security Note
 This project currently includes default database and broker settings intended for local/demo use. Before production or wider sharing:
 - Replace demo credentials
