@@ -25,9 +25,12 @@ services:
     ports:
       - "${MQTT_HOST_PORT}:1883"
       - "${MQTT_WS_HOST_PORT}:9001"
+      - "${MQTT_TLS_HOST_PORT:-8883}:8883"
+      - "${MQTT_WSS_HOST_PORT:-9443}:9443"
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - ./mqtt/auth:/mosquitto/config/auth:ro
+      - ./mqtt/certs:/mosquitto/config/certs:ro
       - mqtt_data:/mosquitto/data
       - mqtt_log:/mosquitto/log
     restart: unless-stopped

@@ -53,6 +53,10 @@ $mqttAclDbUser = if ($envMap.ContainsKey("MQTT_ACL_DB_USER")) { $envMap["MQTT_AC
 $useLocalSqlContainer = $sqlServerHost -in @("127.0.0.1", "localhost", ".")
 $sqlContainerName = if ($envMap.ContainsKey("SQL_CONTAINER_NAME")) { $envMap["SQL_CONTAINER_NAME"] } else { "industrial-mssql" }
 $mqttContainerName = if ($envMap.ContainsKey("MQTT_CONTAINER_NAME")) { $envMap["MQTT_CONTAINER_NAME"] } else { "industrial-mqtt" }
+$rawAuthDir = if ($envMap.ContainsKey("MQTT_AUTH_DIR")) { $envMap["MQTT_AUTH_DIR"] } else { "mqtt\auth" }
+$rawCertDir = if ($envMap.ContainsKey("MQTT_CERT_DIR")) { $envMap["MQTT_CERT_DIR"] } else { "mqtt\certs" }
+$authDir = if ([System.IO.Path]::IsPathRooted($rawAuthDir)) { $rawAuthDir } else { Join-Path $PSScriptRoot $rawAuthDir }
+$certDir = if ([System.IO.Path]::IsPathRooted($rawCertDir)) { $rawCertDir } else { Join-Path $PSScriptRoot $rawCertDir }
 $dockerComposeAvailable = Test-DockerComposeAvailable
 
 if ([string]::IsNullOrWhiteSpace($mqttUser) -or [string]::IsNullOrWhiteSpace($mqttPassword)) {
@@ -91,8 +95,14 @@ if ($useLocalSqlContainer) {
     }
 }
 
-$authDir = Join-Path $PSScriptRoot "mqtt\auth"
 New-Item -ItemType Directory -Force -Path $authDir | Out-Null
+
+$missingCertFiles = @("ca.crt", "server.crt", "server.key") | Where-Object {
+    -not (Test-Path (Join-Path $certDir $_))
+}
+if ($missingCertFiles.Count -gt 0) {
+    Write-Warning "TLS cert files missing in '$certDir': $($missingCertFiles -join ', '). MQTT TLS/WSS listeners may fail to start."
+}
 
 $aclFile = Join-Path $authDir "acl"
 
@@ -134,10 +144,12 @@ foreach ($rule in ($topicRules | Sort-Object -Unique)) {
 }
 
 Set-Content -Path $aclFile -Value $aclLines -Encoding ascii
+Write-Host "Wrote ACL to: $aclFile"
 
 $authDirResolved = (Resolve-Path $authDir).Path
 Remove-Item (Join-Path $authDir "passwd") -Force -ErrorAction SilentlyContinue
 Invoke-CheckedNative { docker run --rm -v "${authDirResolved}:/work" eclipse-mosquitto:2 mosquitto_passwd -b -c /work/passwd "$mqttUser" "$mqttPassword" | Out-Null } "Failed to generate the Mosquitto password file."
+Write-Host "Wrote password file to: $(Join-Path $authDir "passwd")"
 
 if (Test-ContainerExists $mqttContainerName) {
     Invoke-CheckedNative { docker restart $mqttContainerName | Out-Null } "Failed to restart the MQTT container '$mqttContainerName'."
