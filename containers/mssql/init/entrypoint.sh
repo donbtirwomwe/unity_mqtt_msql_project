@@ -20,7 +20,7 @@ fi
 
 echo "SQL Server is ready. Running init scripts..."
 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -No -Q "IF DB_ID(N'${SQL_DATABASE}') IS NULL CREATE DATABASE [${SQL_DATABASE}];"
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -No -d "${SQL_DATABASE}" -i /init/seed_leaktest_pressure01.sql
+/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -No -d "${SQL_DATABASE}" -v AppDbUser="${APP_DB_USER}" AppDbPassword="${APP_DB_PASSWORD}" -i /init/seed_leaktest_pressure01.sql
 
 echo "Initialization complete."
 wait "${SQL_PID}"

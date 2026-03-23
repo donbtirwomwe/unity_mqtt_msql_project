@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 public class AssetController : MonoBehaviour
 {
-    public string serverIp = "192.168.1.50";
+    public string serverIp = "127.0.0.1";
     public DBConfig dbConfig;
     public TMP_Text statusLabel;
 
@@ -18,6 +18,9 @@ public class AssetController : MonoBehaviour
     void Start()
     {
         assetId = gameObject.name;
+
+        if (dbConfig == null)
+            dbConfig = Resources.Load<DBConfig>("DBConfig");
 
         if (statusLabel == null)
         {
@@ -31,25 +34,24 @@ public class AssetController : MonoBehaviour
 
     void LoadAssetData()
     {
-        string conString;
-        if (dbConfig != null)
+        if (dbConfig == null)
         {
-            conString = $"Server={dbConfig.serverIp},{dbConfig.port};Database={dbConfig.database};User Id={dbConfig.userId};Password={dbConfig.password};TrustServerCertificate={dbConfig.trustServerCertificate};";
+            if (statusLabel != null)
+                statusLabel.text = "Missing DBConfig";
+            Debug.LogError("DBConfig is required for AssetController.");
+            return;
         }
-        else
-        {
-            conString = $"Server={serverIp},1433;Database=IndustrialAssets;User Id=sa;Password=Industrial@Demo2026!;TrustServerCertificate=True;";
-        }
+
+        string conString = dbConfig.BuildConnectionString();
 
         try
         {
             using (System.Data.SqlClient.SqlConnection conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string query = "SELECT a.Name, d.Target FROM ASSETS a JOIN DATACHANNELS d ON a.ID = d.ASSET_ID WHERE a.ID = @id";
-
-                using (System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(query, conn))
+                using (System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetAssetTopics", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@id", assetId);
                     using (System.Data.SqlClient.SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -61,7 +63,11 @@ public class AssetController : MonoBehaviour
                             while (reader.Read())
                             {
                                 assetName = reader["Name"].ToString();
-                                topics.Add(reader["Target"].ToString());
+                                string topic = reader["RealTopicPath"] != null && reader["RealTopicPath"] != DBNull.Value
+                                    ? reader["RealTopicPath"].ToString()
+                                    : reader["Target"].ToString();
+                                if (!string.IsNullOrWhiteSpace(topic))
+                                    topics.Add(topic);
                             }
 
                             statusLabel.text = $"{assetName}: Online";
@@ -89,7 +95,7 @@ public class AssetController : MonoBehaviour
         try
         {
             int mqttPort = (dbConfig != null) ? dbConfig.mqttPort : 1884;
-            string mqttServer = (dbConfig != null) ? dbConfig.serverIp : serverIp;
+            string mqttServer = (dbConfig != null) ? dbConfig.GetResolvedMqttServerIp() : serverIp;
             mqttClient = new MqttClient(mqttServer, mqttPort, false, null, null, MqttSslProtocols.None);
 
             mqttClient.MqttMsgPublishReceived += (s, e) =>
@@ -102,7 +108,13 @@ public class AssetController : MonoBehaviour
                 });
             };
 
-            mqttClient.Connect(Guid.NewGuid().ToString());
+            string clientId = Guid.NewGuid().ToString();
+            string mqttUserName = dbConfig != null ? dbConfig.GetResolvedMqttUserName() : null;
+            string mqttPassword = dbConfig != null ? dbConfig.GetResolvedMqttPassword() : null;
+            if (!string.IsNullOrWhiteSpace(mqttUserName))
+                mqttClient.Connect(clientId, mqttUserName, mqttPassword ?? string.Empty);
+            else
+                mqttClient.Connect(clientId);
 
             byte[] qos = new byte[topics.Length];
             for (int i = 0; i < topics.Length; i++) qos[i] = MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE;

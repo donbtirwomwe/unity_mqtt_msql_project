@@ -74,6 +74,154 @@ BEGIN
 	);
 END;
 
+DECLARE @AppDbUser sysname = NULLIF(N'$(AppDbUser)', N'');
+DECLARE @AppDbPassword NVARCHAR(256) = NULLIF(N'$(AppDbPassword)', N'');
+
+IF @AppDbUser IS NOT NULL AND @AppDbPassword IS NOT NULL
+BEGIN
+	IF NOT EXISTS (SELECT 1 FROM master.sys.sql_logins WHERE name = @AppDbUser)
+	BEGIN
+		DECLARE @CreateLoginSql NVARCHAR(MAX) = N'CREATE LOGIN ' + QUOTENAME(@AppDbUser) + N' WITH PASSWORD = ' + QUOTENAME(@AppDbPassword, '''') + N', CHECK_POLICY = ON;';
+		EXEC(@CreateLoginSql);
+	END;
+
+	IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @AppDbUser)
+	BEGIN
+		DECLARE @CreateUserSql NVARCHAR(MAX) = N'CREATE USER ' + QUOTENAME(@AppDbUser) + N' FOR LOGIN ' + QUOTENAME(@AppDbUser) + N';';
+		EXEC(@CreateUserSql);
+	END;
+
+	DECLARE @AlterUserSql NVARCHAR(MAX) = N'ALTER USER ' + QUOTENAME(@AppDbUser) + N' WITH DEFAULT_SCHEMA = [dbo];';
+	EXEC(@AlterUserSql);
+END;
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetAssetList
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT ID, Name, Description
+	FROM dbo.ASSETS
+	ORDER BY ID;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetAssetDetails
+	@id NVARCHAR(64)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT TOP (1)
+		Name,
+		Description,
+		Status,
+		MessagingRole,
+		MessagingRoleCode
+	FROM dbo.ASSETS
+	WHERE ID = @id;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetAssetDataPoints
+	@assetId NVARCHAR(64)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT ID, Name, Description
+	FROM dbo.DATAPOINTS
+	WHERE ASSET_ID = @assetId
+	ORDER BY ID;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetDataPointDetails
+	@id NVARCHAR(64),
+	@assetId NVARCHAR(64)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT TOP (1) Name, Description, Status
+	FROM dbo.DATAPOINTS
+	WHERE ID = @id AND ASSET_ID = @assetId;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetDataPointFiles
+	@assetId NVARCHAR(64),
+	@dpid NVARCHAR(64)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT ID, Name, Description, Type, Link
+	FROM dbo.DATAFILES
+	WHERE ASSET_ID = @assetId AND DATAPOINT_ID = @dpid
+	ORDER BY ID;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetDataPointChannels
+	@assetId NVARCHAR(64),
+	@dpid NVARCHAR(64)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT ID, Name, Description, Target
+	FROM dbo.DATACHANNELS
+	WHERE ASSET_ID = @assetId AND DATAPOINT_ID = @dpid
+	ORDER BY ID;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_ResolveAssetId
+	@input NVARCHAR(1024)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT TOP (1) ID
+	FROM dbo.ASSETS
+	WHERE ID = @input OR Name = @input OR Description LIKE ''%'' + @input + ''%''
+	ORDER BY CASE WHEN ID = @input THEN 0 WHEN Name = @input THEN 1 ELSE 2 END;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetAssetCount
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT COUNT(1) AS AssetCount
+	FROM dbo.ASSETS;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetAssetPreview
+	@limit INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT TOP (@limit) ID, Name
+	FROM dbo.ASSETS
+	ORDER BY ID;
+END');
+
+EXEC(N'
+CREATE OR ALTER PROCEDURE dbo.usp_GetAssetTopics
+	@id NVARCHAR(64)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SELECT a.Name, d.Target
+	FROM dbo.ASSETS a
+	JOIN dbo.DATACHANNELS d ON a.ID = d.ASSET_ID
+	WHERE a.ID = @id
+	ORDER BY d.ID;
+END');
+
+IF @AppDbUser IS NOT NULL
+BEGIN
+	DECLARE @GrantExecSql NVARCHAR(MAX) = N'GRANT EXECUTE TO ' + QUOTENAME(@AppDbUser) + N';';
+	EXEC(@GrantExecSql);
+END;
+
 DELETE FROM DATAFILES WHERE ASSET_ID IN ('b101', 'b102');
 DELETE FROM DATACHANNELS WHERE ASSET_ID IN ('b101', 'b102');
 DELETE FROM DATAPOINTS WHERE ASSET_ID IN ('b101', 'b102');
@@ -106,25 +254,25 @@ INSERT INTO DATAPOINTS (ID, ASSET_ID, Name, Description, Status) VALUES
 ('d102', 'b102', 'Sensor Diagnostics', 'Calibration and drift indicators.', 1);
 
 INSERT INTO DATACHANNELS (ID, ASSET_ID, DATAPOINT_ID, Name, Description, Target) VALUES
-('e101', 'b101', 'c101', 'Hold Pressure PSI', 'Current hold pressure.', 'plant/leaktest/hold/pressure_psi'),
-('e102', 'b101', 'c101', 'Hold Timer Sec', 'Elapsed hold timer.', 'plant/leaktest/hold/timer_s'),
-('e103', 'b101', 'c101', 'Pressure Decay', 'Pressure decay slope during hold.', 'plant/leaktest/hold/decay_rate_psi_s'),
-('e104', 'b101', 'c102', 'Fill Flow SCCM', 'Fill flow command/actual.', 'plant/leaktest/fill/flow_sccm'),
-('e105', 'b101', 'c102', 'Charge Pressure PSI', 'Pressure during charge ramp.', 'plant/leaktest/fill/charge_pressure_psi'),
-('e106', 'b101', 'c103', 'Ambient Temp C', 'Ambient temperature.', 'plant/leaktest/temp/ambient_c'),
-('e107', 'b101', 'c103', 'Part Temp C', 'Part body temperature.', 'plant/leaktest/temp/part_c'),
-('e108', 'b101', 'c103', 'Comp Pressure PSI', 'Temperature compensated pressure.', 'plant/leaktest/temp/comp_pressure_psi'),
-('e109', 'b101', 'c104', 'Gross Leak Alarm', 'Boolean alarm for gross leak.', 'plant/leaktest/gross/alarm'),
-('e10a', 'b101', 'c104', 'Rapid Drop Flag', 'Rapid drop detection flag.', 'plant/leaktest/gross/rapid_drop'),
-('e10b', 'b101', 'c105', 'Leak Rate SCCM', 'Computed leak rate.', 'plant/leaktest/fine/leak_rate_sccm'),
-('e10c', 'b101', 'c105', 'Leak Limit SCCM', 'Configured leak acceptance limit.', 'plant/leaktest/fine/leak_limit_sccm'),
-('e10d', 'b101', 'c106', 'Pass Fail', 'Final pass/fail bit.', 'plant/leaktest/result/pass_fail'),
-('e10e', 'b101', 'c106', 'Result Code', 'Failure mode / result code.', 'plant/leaktest/result/code'),
-('e201', 'b102', 'd101', 'Pressure PSI', 'Raw sensor pressure reading.', 'plant/pressure01/telemetry/pressure_psi'),
-('e202', 'b102', 'd101', 'Pressure Filtered', 'Filtered pressure value.', 'plant/pressure01/telemetry/pressure_filtered_psi'),
-('e203', 'b102', 'd101', 'Sensor Health', 'Health/quality indicator.', 'plant/pressure01/telemetry/health'),
-('e204', 'b102', 'd102', 'Calibration Due', 'Calibration due flag.', 'plant/pressure01/diag/calibration_due'),
-('e205', 'b102', 'd102', 'Drift PPM', 'Estimated sensor drift.', 'plant/pressure01/diag/drift_ppm');
+('e101', 'b101', 'c101', 'Hold Pressure PSI', 'Current hold pressure.', 'mx/7a/01'),
+('e102', 'b101', 'c101', 'Hold Timer Sec', 'Elapsed hold timer.', 'mx/7a/02'),
+('e103', 'b101', 'c101', 'Pressure Decay', 'Pressure decay slope during hold.', 'mx/7a/03'),
+('e104', 'b101', 'c102', 'Fill Flow SCCM', 'Fill flow command/actual.', 'mx/7a/04'),
+('e105', 'b101', 'c102', 'Charge Pressure PSI', 'Pressure during charge ramp.', 'mx/7a/05'),
+('e106', 'b101', 'c103', 'Ambient Temp C', 'Ambient temperature.', 'mx/7a/06'),
+('e107', 'b101', 'c103', 'Part Temp C', 'Part body temperature.', 'mx/7a/07'),
+('e108', 'b101', 'c103', 'Comp Pressure PSI', 'Temperature compensated pressure.', 'mx/7a/08'),
+('e109', 'b101', 'c104', 'Gross Leak Alarm', 'Boolean alarm for gross leak.', 'mx/7a/09'),
+('e10a', 'b101', 'c104', 'Rapid Drop Flag', 'Rapid drop detection flag.', 'mx/7a/0a'),
+('e10b', 'b101', 'c105', 'Leak Rate SCCM', 'Computed leak rate.', 'mx/7a/0b'),
+('e10c', 'b101', 'c105', 'Leak Limit SCCM', 'Configured leak acceptance limit.', 'mx/7a/0c'),
+('e10d', 'b101', 'c106', 'Pass Fail', 'Final pass/fail bit.', 'mx/7a/0d'),
+('e10e', 'b101', 'c106', 'Result Code', 'Failure mode / result code.', 'mx/7a/0e'),
+('e201', 'b102', 'd101', 'Pressure PSI', 'Raw sensor pressure reading.', 'mx/9c/01'),
+('e202', 'b102', 'd101', 'Pressure Filtered', 'Filtered pressure value.', 'mx/9c/02'),
+('e203', 'b102', 'd101', 'Sensor Health', 'Health/quality indicator.', 'mx/9c/03'),
+('e204', 'b102', 'd102', 'Calibration Due', 'Calibration due flag.', 'mx/9c/04'),
+('e205', 'b102', 'd102', 'Drift PPM', 'Estimated sensor drift.', 'mx/9c/05');
 
 INSERT INTO DATAFILES (ID, ASSET_ID, DATAPOINT_ID, Name, Description, Type, Link) VALUES
 ('f101', 'b101', 'c101', 'Hold Procedure', 'Work instruction for pressure hold.', 'pdf', 'docs/leaktest/hold_procedure.pdf'),

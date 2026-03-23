@@ -15,13 +15,15 @@ MonoBehaviour:
   serverIp: 192.168.1.50
   port: 1433
   database: IndustrialAssets
-  userId: sa
-  password: Industrial@Demo2026!
+  userId: app_reader
+  password: R3adOnly!Bridge_2026
   trustServerCertificate: 1
   mqttServerIp: 192.168.1.50
   mqttPort: 1884
+  mqttUserName: 
+  mqttPassword: 
   useServerShareForRelativeLinks: 0
-  serverFileShareName: mqtt-project
+  serverFileShareName: 
   localFileRoot: 
-  webFileRoot: http://192.168.1.50:8080
-  preferWebFileLinks: 1
+  webFileRoot: 
+  preferWebFileLinks: 0

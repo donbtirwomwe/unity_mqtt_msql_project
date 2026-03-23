@@ -7,6 +7,8 @@ services:
       MSSQL_SA_PASSWORD: ${SA_PASSWORD}
       MSSQL_PID: "Developer"
       SQL_DATABASE: ${SQL_DATABASE}
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
     ports:
       - "1433:1433"
     volumes:
@@ -25,6 +27,7 @@ services:
       - "${MQTT_WS_HOST_PORT}:9001"
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mqtt/auth:/mosquitto/config/auth:ro
       - mqtt_data:/mosquitto/data
       - mqtt_log:/mosquitto/log
     restart: unless-stopped

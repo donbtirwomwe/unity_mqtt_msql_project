@@ -17,17 +17,20 @@ public class DBConfigHolder : MonoBehaviour
 
         if (logOnStart)
         {
+            string resolvedServerIp = config.GetResolvedServerIp();
+            string resolvedDatabase = config.GetResolvedDatabase();
+            string resolvedMqttIp = config.GetResolvedMqttServerIp();
             bool webMode = config.preferWebFileLinks && !string.IsNullOrWhiteSpace(config.webFileRoot);
             bool serverShareMode = !webMode
                 && config.useServerShareForRelativeLinks
-                && !string.IsNullOrWhiteSpace(config.serverIp)
+                && !string.IsNullOrWhiteSpace(resolvedServerIp)
                 && !string.IsNullOrWhiteSpace(config.serverFileShareName);
 
             string linkMode = webMode ? "web" : (serverShareMode ? "server-share" : "local");
             string linkRoot = webMode
                 ? config.webFileRoot
-                : (serverShareMode ? "\\\\" + config.serverIp + "\\" + config.serverFileShareName : config.localFileRoot);
-            Debug.Log($"DB server: {config.serverIp}:{config.port} DB: {config.database} MQTT:{config.mqttPort} FileLinks:{linkMode} Root:{linkRoot}");
+                : (serverShareMode ? "\\" + resolvedServerIp + "\\" + config.serverFileShareName : config.localFileRoot);
+            Debug.Log($"DB server: {resolvedServerIp}:{config.port} DB: {resolvedDatabase} MQTT:{resolvedMqttIp}:{config.mqttPort} FileLinks:{linkMode} Root:{linkRoot}");
         }
     }
 }

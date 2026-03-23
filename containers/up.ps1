@@ -2,6 +2,30 @@ $ErrorActionPreference = "Stop"
 
 Set-Location $PSScriptRoot
 
+function Invoke-CheckedNative {
+    param(
+        [ScriptBlock]$Command,
+        [string]$FailureMessage
+    )
+
+    & $Command
+    if ($LASTEXITCODE -ne 0) {
+        throw $FailureMessage
+    }
+}
+
+function Test-ContainerExists {
+    param([string]$Name)
+
+    & docker container inspect $Name *> $null
+    return $LASTEXITCODE -eq 0
+}
+
+function Test-DockerComposeAvailable {
+    & docker compose version *> $null
+    return $LASTEXITCODE -eq 0
+}
+
 if (-not (Test-Path ".env")) {
     Copy-Item ".env.example" ".env"
     Write-Host "Created containers/.env from template. Update password/ports if needed."
@@ -27,6 +51,9 @@ $sqlUser = $envMap["APP_DB_USER"]
 $sqlPassword = $envMap["APP_DB_PASSWORD"]
 $mqttAclDbUser = if ($envMap.ContainsKey("MQTT_ACL_DB_USER")) { $envMap["MQTT_ACL_DB_USER"] } elseif ($envMap.ContainsKey("APP_DB_USER")) { $envMap["APP_DB_USER"] } else { "app_reader" }
 $useLocalSqlContainer = $sqlServerHost -in @("127.0.0.1", "localhost", ".")
+$sqlContainerName = if ($envMap.ContainsKey("SQL_CONTAINER_NAME")) { $envMap["SQL_CONTAINER_NAME"] } else { "industrial-mssql" }
+$mqttContainerName = if ($envMap.ContainsKey("MQTT_CONTAINER_NAME")) { $envMap["MQTT_CONTAINER_NAME"] } else { "industrial-mqtt" }
+$dockerComposeAvailable = Test-DockerComposeAvailable
 
 if ([string]::IsNullOrWhiteSpace($mqttUser) -or [string]::IsNullOrWhiteSpace($mqttPassword)) {
     throw "MQTT_APP_USERNAME and MQTT_APP_PASSWORD must be set in containers/.env before starting the broker."
@@ -37,7 +64,12 @@ if ([string]::IsNullOrWhiteSpace($sqlUser) -or [string]::IsNullOrWhiteSpace($sql
 }
 
 if ($useLocalSqlContainer) {
-    docker compose --env-file .env -f docker-compose.yml up -d mssql
+    if (Test-ContainerExists $sqlContainerName) {
+        Invoke-CheckedNative { docker start $sqlContainerName | Out-Null } "Failed to start the SQL container '$sqlContainerName'."
+    }
+    elseif ($dockerComposeAvailable) {
+        Invoke-CheckedNative { docker compose -f docker-compose.yml up -d mssql } "Failed to start the mssql service via docker compose."
+    }
 
     $sqlReady = $false
     for ($attempt = 1; $attempt -le 30; $attempt++) {
@@ -104,12 +136,19 @@ foreach ($rule in ($topicRules | Sort-Object -Unique)) {
 Set-Content -Path $aclFile -Value $aclLines -Encoding ascii
 
 $authDirResolved = (Resolve-Path $authDir).Path
-docker run --rm -v "${authDirResolved}:/work" eclipse-mosquitto:2 mosquitto_passwd -b -c /work/passwd "$mqttUser" "$mqttPassword" | Out-Null
+Remove-Item (Join-Path $authDir "passwd") -Force -ErrorAction SilentlyContinue
+Invoke-CheckedNative { docker run --rm -v "${authDirResolved}:/work" eclipse-mosquitto:2 mosquitto_passwd -b -c /work/passwd "$mqttUser" "$mqttPassword" | Out-Null } "Failed to generate the Mosquitto password file."
 
-if ($useLocalSqlContainer) {
-    docker compose --env-file .env -f docker-compose.yml up -d --force-recreate mqtt
+if (Test-ContainerExists $mqttContainerName) {
+    Invoke-CheckedNative { docker restart $mqttContainerName | Out-Null } "Failed to restart the MQTT container '$mqttContainerName'."
+}
+elseif ($useLocalSqlContainer -and $dockerComposeAvailable) {
+    Invoke-CheckedNative { docker compose -f docker-compose.yml up -d --force-recreate mqtt } "Failed to recreate the mqtt service via docker compose."
+}
+elseif ($dockerComposeAvailable) {
+    Invoke-CheckedNative { docker compose -f docker-compose.yml up -d --force-recreate } "Failed to recreate the container stack via docker compose."
 }
 else {
-    docker compose --env-file .env -f docker-compose.yml up -d --force-recreate
+    throw "The MQTT container '$mqttContainerName' does not exist and docker compose is unavailable on this host."
 }
 Write-Host "Containers started."

@@ -28,48 +28,23 @@ public class Asset
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                bool hasMessagingRole = false;
-                bool hasMessagingRoleCode = false;
-                using (var schemaCmd = new System.Data.SqlClient.SqlCommand(
-                    "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ASSETS' AND COLUMN_NAME = 'MessagingRole'", conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetAssetDetails", conn))
                 {
-                    var exists = schemaCmd.ExecuteScalar();
-                    hasMessagingRole = exists != null && Convert.ToInt32(exists) > 0;
-                }
-
-                using (var schemaCmd = new System.Data.SqlClient.SqlCommand(
-                    "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ASSETS' AND COLUMN_NAME = 'MessagingRoleCode'", conn))
-                {
-                    var exists = schemaCmd.ExecuteScalar();
-                    hasMessagingRoleCode = exists != null && Convert.ToInt32(exists) > 0;
-                }
-
-                string query = "SELECT Name, Description, Status";
-                if (hasMessagingRole)
-                    query += ", MessagingRole";
-                if (hasMessagingRoleCode)
-                    query += ", MessagingRoleCode";
-                query += " FROM ASSETS WHERE ID = @id";
-
-                using (var cmd = new System.Data.SqlClient.SqlCommand(query, conn))
-                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@id", id);
                     using (var r = cmd.ExecuteReader())
                     {
                         if (r.Read())
                         {
-                            // Inside the reader loop:
                             this.name = r["Name"].ToString();
                             this.description = r["Description"].ToString();
-
-                            // Convert the SQL INT directly back to your Unity Enum
                             this.status = (StatusType)r.GetInt32(r.GetOrdinal("Status"));
 
-                            this.messagingRole = hasMessagingRole && r["MessagingRole"] != null
+                            this.messagingRole = r["MessagingRole"] != null && r["MessagingRole"] != DBNull.Value
                                 ? r["MessagingRole"].ToString()
                                 : null;
 
-                            if (hasMessagingRoleCode && r["MessagingRoleCode"] != null && r["MessagingRoleCode"] != DBNull.Value)
+                            if (r["MessagingRoleCode"] != null && r["MessagingRoleCode"] != DBNull.Value)
                                 this.messagingRoleCode = Convert.ToInt32(r["MessagingRoleCode"]);
                             else
                                 this.messagingRoleCode = null;
@@ -93,9 +68,9 @@ public class Asset
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT ID, Name, Description FROM DATAPOINTS WHERE ASSET_ID = @assetId";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetAssetDataPoints", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@assetId", id);
                     using (var r = cmd.ExecuteReader())
                     {
@@ -158,8 +133,8 @@ public class Asset
         {
             foreach (var ch in dp.channels)
             {
-                if (!string.IsNullOrEmpty(ch.target))
-                    topics.Add(ch.target);
+                if (!string.IsNullOrEmpty(ch.realTopicPath))
+                    topics.Add(ch.realTopicPath);
             }
         }
         return topics;

@@ -27,9 +27,9 @@ public class DataPoint
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT Name, Description, Status FROM DATAPOINTS WHERE ID = @id AND ASSET_ID = @assetId";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetDataPointDetails", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@id", id);
                     cmd.Parameters.AddWithValue("@assetId", assetId);
                     using (var r = cmd.ExecuteReader())
@@ -59,9 +59,9 @@ public class DataPoint
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT ID, Name, Description, Type, Link FROM DATAFILES WHERE ASSET_ID = @assetId AND DATAPOINT_ID = @dpid";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetDataPointFiles", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@assetId", assetId);
                     cmd.Parameters.AddWithValue("@dpid", id);
                     using (var r = cmd.ExecuteReader())
@@ -96,9 +96,9 @@ public class DataPoint
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT ID, Name, Description, Target FROM DATACHANNELS WHERE ASSET_ID = @assetId AND DATAPOINT_ID = @dpid";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetDataPointChannels", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@assetId", assetId);
                     cmd.Parameters.AddWithValue("@dpid", id);
                     using (var r = cmd.ExecuteReader())
@@ -109,7 +109,8 @@ public class DataPoint
                                 r["ID"]?.ToString(),
                                 r["Name"]?.ToString(),
                                 r["Description"]?.ToString(),
-                                r["Target"]?.ToString()
+                                r["Target"]?.ToString(),
+                                r["RealTopicPath"]?.ToString()
                             );
                             channels.Add(c);
                         }
@@ -194,8 +195,8 @@ public class DataPoint
         var topics = new List<string>();
         foreach (var ch in channels)
         {
-            if (!string.IsNullOrEmpty(ch.target))
-                topics.Add(ch.target);
+            if (!string.IsNullOrEmpty(ch.realTopicPath))
+                topics.Add(ch.realTopicPath);
         }
         return topics;
     }

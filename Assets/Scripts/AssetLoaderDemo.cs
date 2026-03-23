@@ -52,6 +52,7 @@ public class AssetLoaderDemo : MonoBehaviour
     private RectTransform datapointListContent;
     private RectTransform sceneImpressionPanel;
     private readonly List<string> dropdownAssetIds = new List<string>();
+    private readonly MqttValueProvider mqttValueProvider = new MqttValueProvider();
     private float lastDisplayUpdateTime = 0f;
     private const float DisplayUpdateInterval = 0.1f; 
     private const float SectionHeaderContentOffset = 48f;
@@ -312,7 +313,7 @@ public class AssetLoaderDemo : MonoBehaviour
 
         if (dbConfig == null) return;
 
-        string conString = $"Server={dbConfig.serverIp},{dbConfig.port};Database={dbConfig.database};User Id={dbConfig.userId};Password={dbConfig.password};TrustServerCertificate=True;";
+        string conString = BuildConnectionString();
 
         dropdownAssetIds.Clear();
         var labels = new List<Dropdown.OptionData>();
@@ -322,19 +323,21 @@ public class AssetLoaderDemo : MonoBehaviour
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT ID, Name, Description FROM ASSETS ORDER BY ID";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
-                using (var r = cmd.ExecuteReader())
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetAssetList", conn))
                 {
-                    while (r.Read())
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                using (var r = cmd.ExecuteReader())
                     {
-                        string id = r["ID"]?.ToString();
-                        string name = r["Name"]?.ToString();
-                        string description = r["Description"]?.ToString();
-                        if (string.IsNullOrEmpty(id)) continue;
-                        dropdownAssetIds.Add(id);
-                        string label = !string.IsNullOrEmpty(description) ? description : name;
-                        labels.Add(new Dropdown.OptionData(string.IsNullOrEmpty(label) ? id : $"{id} - {label}"));
+                        while (r.Read())
+                        {
+                            string id = r["ID"]?.ToString();
+                            string name = r["Name"]?.ToString();
+                            string description = r["Description"]?.ToString();
+                            if (string.IsNullOrEmpty(id)) continue;
+                            dropdownAssetIds.Add(id);
+                            string label = !string.IsNullOrEmpty(description) ? description : name;
+                            labels.Add(new Dropdown.OptionData(string.IsNullOrEmpty(label) ? id : $"{id} - {label}"));
+                        }
                     }
                 }
             }
@@ -379,7 +382,7 @@ public class AssetLoaderDemo : MonoBehaviour
         }
 
         // Uses the connection parameters from your DBConfig asset
-        string conString = $"Server={dbConfig.serverIp},{dbConfig.port};Database={dbConfig.database};User Id={dbConfig.userId};Password={dbConfig.password};TrustServerCertificate=True;";
+        string conString = BuildConnectionString();
 
         try 
         {
@@ -644,7 +647,7 @@ public class AssetLoaderDemo : MonoBehaviour
     {
         if (currentAsset == null || index < 0 || index >= currentAsset.dataPoints.Count) return;
 
-        string conString = $"Server={dbConfig.serverIp},{dbConfig.port};Database={dbConfig.database};User Id={dbConfig.userId};Password={dbConfig.password};TrustServerCertificate=True;";
+        string conString = BuildConnectionString();
 
         if (mqttClient != null && mqttClient.IsConnected && previousDataPoint != null)
         {
@@ -712,20 +715,6 @@ public class AssetLoaderDemo : MonoBehaviour
                 foreach (var ch in currentDataPoint.channels)
                 {
                     channelText += $"• {ch.name}: {ch.value}\n";
-                }
-            }
-
-            channelText += "\n<b>" + GetTopicSectionTitle(currentRole) + ":</b>\n";
-            if (currentDataPoint.channels.Count == 0)
-            {
-                channelText += "none\n";
-            }
-            else
-            {
-                foreach (var ch in currentDataPoint.channels)
-                {
-                    if (!string.IsNullOrEmpty(ch.target))
-                        channelText += $"• {ch.target}  =>  {ch.value}\n";
                 }
             }
             channelsDisplayText.text = channelText;
@@ -844,14 +833,26 @@ public class AssetLoaderDemo : MonoBehaviour
     {
         if (mqttClient != null && mqttClient.IsConnected) return;
 
-        string mqttHost = !string.IsNullOrEmpty(dbConfig.mqttServerIp) ? dbConfig.mqttServerIp : dbConfig.serverIp;
+        string mqttHost = dbConfig.GetResolvedMqttServerIp();
         mqttClient = new MqttClient(mqttHost, dbConfig.mqttPort, false, null, null, MqttSslProtocols.None);
         mqttClient.MqttMsgPublishReceived += (s, e) =>
         {
             string msg = Encoding.UTF8.GetString(e.Message);
-            Debug.Log($"MQTT Pulse: {e.Topic} >> {msg}");
+            mqttValueProvider.UpdateValue(e.Topic, msg);
+            if (currentAsset != null)
+            {
+                foreach (var dataPoint in currentAsset.dataPoints)
+                    dataPoint.UpdateChannels(mqttValueProvider);
+            }
+            Debug.Log("MQTT message received.");
         };
-        mqttClient.Connect(Guid.NewGuid().ToString());
+        string clientId = Guid.NewGuid().ToString();
+        string mqttUserName = dbConfig.GetResolvedMqttUserName();
+        string mqttPassword = dbConfig.GetResolvedMqttPassword();
+        if (!string.IsNullOrWhiteSpace(mqttUserName))
+            mqttClient.Connect(clientId, mqttUserName, mqttPassword ?? string.Empty);
+        else
+            mqttClient.Connect(clientId);
         Debug.Log($"Connected to MQTT broker at {mqttHost}:{dbConfig.mqttPort}");
     }
 
@@ -1259,11 +1260,10 @@ public class AssetLoaderDemo : MonoBehaviour
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT TOP 1 ID FROM ASSETS WHERE ID = @input OR Name = @input OR Description LIKE @description ORDER BY CASE WHEN ID = @input THEN 0 WHEN Name = @input THEN 1 ELSE 2 END";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_ResolveAssetId", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@input", input);
-                    cmd.Parameters.AddWithValue("@description", "%" + input + "%");
                     var result = cmd.ExecuteScalar();
                     if (result != null)
                         return result.ToString();
@@ -1285,8 +1285,9 @@ public class AssetLoaderDemo : MonoBehaviour
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                using (var cmd = new System.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM ASSETS", conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetAssetCount", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     object result = cmd.ExecuteScalar();
                     return (result != null) ? Convert.ToInt32(result) : 0;
                 }
@@ -1305,9 +1306,9 @@ public class AssetLoaderDemo : MonoBehaviour
             using (var conn = new System.Data.SqlClient.SqlConnection(conString))
             {
                 conn.Open();
-                string q = "SELECT TOP (@limit) ID, Name FROM ASSETS ORDER BY ID";
-                using (var cmd = new System.Data.SqlClient.SqlCommand(q, conn))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("dbo.usp_GetAssetPreview", conn))
                 {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@limit", limit);
                     using (var r = cmd.ExecuteReader())
                     {
@@ -1396,15 +1397,13 @@ public class AssetLoaderDemo : MonoBehaviour
                 channelText += $"• {ch.name}: {ch.value}\n";
             }
 
-            channelText += "\n<b>" + GetTopicSectionTitle(currentRole) + ":</b>\n";
-            foreach (var ch in currentDataPoint.channels)
-            {
-                if (!string.IsNullOrEmpty(ch.target))
-                    channelText += $"• {ch.target}  =>  {ch.value}\n";
-            }
-
             channelsDisplayText.text = channelText;
         }
+    }
+
+    private string BuildConnectionString()
+    {
+        return dbConfig.BuildConnectionString();
     }
 
     private void SetColor(TMP_Text textElement, StatusType status)
